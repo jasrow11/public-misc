@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Firewall, Router &amp; NAT Feature Matrix</title>
+<style>
+:root{
+  --teal:#0F5566; --teal2:#1A7A8C; --slate:#2E4057; --slate2:#4a5d73;
+  --ink:#1c2836; --muted:#5b6b7c; --line:#d9e0e6; --line2:#e8edf1;
+  --bg:#f4f6f8; --card:#ffffff;
+  --yes:#1f7a4d; --yes-bg:#e6f4ec;
+  --part:#b26a00; --part-bg:#fbf1db;
+  --no:#b23a48; --no-bg:#f8e8ea;
+  --na:#8a97a4; --na-bg:#eef1f4;
+  --cV:#0F5566; --cL:#94794a; --cU:#9aa6b2;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,system-ui,sans-serif;
+  color:var(--ink); background:var(--bg); font-size:14px; line-height:1.45; -webkit-font-smoothing:antialiased;}
+.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.wrap{max-width:100%; padding:22px 26px 60px}
+header.top{border-bottom:2px solid var(--teal); padding-bottom:16px; margin-bottom:16px}
+.eyebrow{font-family:ui-monospace,Consolas,monospace; font-size:11px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--teal2); font-weight:700}
+h1{font-size:23px; margin:6px 0 4px; color:var(--slate); letter-spacing:-.01em; font-weight:700}
+.sub{color:var(--muted); font-size:13px; max-width:960px}
+.statbar{display:flex; flex-wrap:wrap; gap:8px 22px; margin-top:12px; font-size:12.5px; color:var(--slate)}
+.statbar b{font-family:ui-monospace,Consolas,monospace}
+.statbar .sep{color:var(--line)}
+
+.toolbar{display:flex; flex-wrap:wrap; gap:14px 20px; align-items:flex-end; margin-bottom:14px;
+  padding:12px 14px; background:var(--card); border:1px solid var(--line); border-radius:8px}
+.grp{display:flex; flex-direction:column; gap:6px}
+.grp>.lab{font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); font-weight:700}
+.chips{display:flex; flex-wrap:wrap; gap:5px}
+.chip{font-size:11.5px; border:1px solid var(--line); background:#fff; color:var(--slate);
+  padding:4px 9px; border-radius:20px; cursor:pointer; user-select:none; white-space:nowrap; transition:.12s}
+.chip:hover{border-color:var(--teal2)}
+.chip.on{background:var(--teal); color:#fff; border-color:var(--teal)}
+.chip.catchip.on{background:var(--slate); border-color:var(--slate)}
+.chip.small{font-size:11px; padding:3px 8px}
+input.search{font-size:13px; padding:7px 10px; border:1px solid var(--line); border-radius:6px; min-width:220px; color:var(--ink)}
+input.search:focus{outline:2px solid var(--teal2); outline-offset:-1px; border-color:var(--teal2)}
+.count{font-size:12px; color:var(--muted); align-self:center}
+.btnreset{font-size:11.5px; border:1px solid var(--line); background:#fff; color:var(--slate);
+  padding:5px 11px; border-radius:6px; cursor:pointer}
+.btnreset:hover{border-color:var(--no); color:var(--no)}
+
+.tablecard{background:var(--card); border:1px solid var(--line); border-radius:8px; overflow:hidden}
+.scroller{overflow:auto; max-height:76vh; position:relative}
+table{border-collapse:separate; border-spacing:0; width:auto}
+th,td{padding:0; margin:0}
+
+thead th{position:sticky; background:#fff; z-index:3}
+thead tr.bands th{top:0; height:26px; font-size:10.5px; font-weight:700; letter-spacing:.06em;
+  text-transform:uppercase; color:#fff; text-align:center; border-bottom:1px solid rgba(255,255,255,.35);
+  border-right:2px solid #fff; white-space:nowrap; padding:0 8px; z-index:4}
+thead tr.cols th{top:26px; z-index:3}
+th.colh{height:200px; width:34px; min-width:34px; max-width:34px; vertical-align:bottom;
+  border-right:1px solid var(--line2); border-bottom:2px solid var(--slate); cursor:pointer; background:#fff; padding-bottom:8px}
+th.colh:hover{background:#eef4f5}
+th.colh .vt{writing-mode:vertical-rl; transform:rotate(180deg); font-size:11px; font-weight:600;
+  color:var(--slate); line-height:1.05; margin:0 auto; max-height:182px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+th.colh .arrow{display:block; text-align:center; font-size:9px; color:var(--teal2); height:10px}
+th.colh.sortactive{background:#e3eef0}
+th.colh.sortactive .arrow{color:var(--teal)}
+th.catend{border-right:2px solid var(--slate)!important}
+
+th.corner{left:0; top:0; z-index:6; width:250px; min-width:250px; max-width:250px; background:#fff;
+  border-right:2px solid var(--slate); border-bottom:2px solid var(--slate); text-align:left; vertical-align:bottom; padding:10px 12px; cursor:pointer}
+th.corner .t{font-size:12px; font-weight:700; color:var(--slate); letter-spacing:.02em}
+th.corner .h{font-size:10.5px; color:var(--muted); font-weight:400; margin-top:2px}
+th.corner:hover{background:#eef4f5}
+
+/* score column - sticky right */
+th.scoreh{right:0; top:0; z-index:5; width:80px; min-width:80px; max-width:80px; background:#f3f8f9;
+  border-left:2px solid var(--slate); border-bottom:2px solid var(--slate); vertical-align:bottom;
+  padding:8px 6px; cursor:pointer; text-align:center}
+th.scoreh .t{font-size:11px; font-weight:700; color:var(--slate); text-transform:uppercase; letter-spacing:.05em}
+th.scoreh .h{font-size:9px; color:var(--muted); margin-top:2px; font-weight:400}
+th.scoreh .arrow{font-size:9px; color:var(--teal2)}
+th.scoreh.sortactive{background:#e3eef0}
+th.scoreh.sortactive .arrow{color:var(--teal)}
+td.scorecell{position:sticky; right:0; z-index:2; width:80px; min-width:80px; max-width:80px; background:#f7fbfc;
+  border-left:2px solid var(--slate); border-bottom:1px solid var(--line2); padding:5px 8px; text-align:center}
+tr:hover td.scorecell{background:#eef6f7}
+.scoreval{font-family:ui-monospace,Consolas,monospace; font-weight:700; font-size:13px; color:var(--slate)}
+.scorebar{height:4px; background:var(--line2); border-radius:2px; margin-top:3px; overflow:hidden}
+.scorebar>i{display:block; height:100%; background:var(--teal2)}
+.rank{font-size:9px; color:var(--muted); font-family:ui-monospace,Consolas,monospace}
+
+td.prod{position:sticky; left:0; z-index:2; background:#fff; width:250px; min-width:250px; max-width:250px;
+  border-right:2px solid var(--slate); border-bottom:1px solid var(--line2); padding:7px 12px; vertical-align:middle}
+tr:hover td.prod{background:#f2f7f8}
+.pname{font-size:13px; font-weight:650; color:var(--ink); display:flex; align-items:center; gap:6px}
+.pmeta{font-size:10.5px; color:var(--muted); margin-top:1px}
+.pmeta .mono{font-size:10px}
+.tierchip{flex:0 0 auto; font-size:9px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; padding:1px 5px; border-radius:3px; color:#fff}
+.note{flex:0 0 auto; width:14px; height:14px; border-radius:50%; border:1px solid var(--line); color:var(--muted);
+  font-size:9px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; cursor:help; background:#fbfdfe}
+.note:hover{border-color:var(--teal2); color:var(--teal)}
+
+td.cell{width:34px; min-width:34px; max-width:34px; height:34px; text-align:center; vertical-align:middle;
+  border-right:1px solid var(--line2); border-bottom:1px solid var(--line2); position:relative; cursor:default}
+td.cell.catend{border-right:2px solid var(--slate)}
+.glyph{font-size:14px; line-height:1; font-weight:700}
+.cy{background:var(--yes-bg)} .cy .glyph{color:var(--yes)}
+.cp{background:var(--part-bg)} .cp .glyph{color:var(--part)}
+.cn{background:var(--no-bg)} .cn .glyph{color:var(--no)}
+.ca{background:var(--na-bg)} .ca .glyph{color:var(--na)}
+.cbadge{position:absolute; top:1px; right:2px; font-family:ui-monospace,Consolas,monospace; font-size:8px; font-weight:700; line-height:1}
+.bV{color:var(--cV)} .bL{color:var(--cL); opacity:.85} .bU{color:var(--cU)}
+.dmark{position:absolute; bottom:0px; left:2px; font-family:ui-monospace,Consolas,monospace; font-size:8px; font-weight:700; line-height:1; letter-spacing:.02em}
+.dN{color:var(--yes)} .dA{color:var(--part)}
+.scroller.dim td.cell:not(.match) .glyph{opacity:.14}
+.scroller.dim td.cell:not(.match) .cbadge,.scroller.dim td.cell:not(.match) .dmark{opacity:.14}
+.scroller.dim td.cell.match{outline:1.5px solid var(--teal); outline-offset:-1.5px; z-index:1}
+
+.legend{display:flex; flex-wrap:wrap; gap:10px 26px; margin:14px 2px 0; font-size:12px; color:var(--slate)}
+.legend .grp2{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+.legend .item{display:flex; align-items:center; gap:6px}
+.lg{width:20px; height:20px; border-radius:4px; display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; border:1px solid var(--line2)}
+.lg.cy{color:var(--yes)} .lg.cp{color:var(--part)} .lg.cn{color:var(--no)} .lg.ca{color:var(--na)}
+.legend .cbx{font-family:ui-monospace,Consolas,monospace; font-weight:700; font-size:11px; border:1px solid var(--line); border-radius:4px; padding:1px 5px}
+
+details.method{margin-top:18px; background:var(--card); border:1px solid var(--line); border-radius:8px}
+details.method>summary{cursor:pointer; padding:12px 16px; font-weight:650; color:var(--slate); font-size:13.5px; list-style:none}
+details.method>summary::-webkit-details-marker{display:none}
+details.method>summary::before{content:"\25B8"; color:var(--teal2); margin-right:8px; font-size:11px}
+details.method[open]>summary::before{content:"\25BE"}
+.method .body{padding:2px 18px 18px; font-size:12.8px; color:var(--slate)}
+.method h4{margin:16px 0 5px; font-size:12.5px; color:var(--teal); text-transform:uppercase; letter-spacing:.05em}
+.method p{margin:5px 0}
+.method .cat{margin:9px 0; padding-left:12px; border-left:2px solid var(--line)}
+.method .cat b{color:var(--ink)}
+.method ul{margin:5px 0; padding-left:20px}
+.method li{margin:3px 0}
+
+footer.ft{margin-top:22px; padding-top:12px; border-top:1px solid var(--line); font-size:11.5px; color:var(--muted)}
+
+.t-oss{background:#2f8f6b} .t-router{background:#3a6b8f} .t-pkg{background:#7a6a3a}
+.t-ngfw{background:#8a3b57} .t-cgn{background:#8a5a2f} .t-cloud{background:#4a5d73}
+
+@media (max-width:640px){
+  .wrap{padding:14px 12px 50px}
+  th.corner,td.prod{width:180px;min-width:180px;max-width:180px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="eyebrow">Capability comparison &#183; 34 platforms &#183; 63 features</div>
+  <h1>Enterprise Firewall, Router &amp; Packet-Filter Feature Matrix</h1>
+  <div class="sub">Advanced rule management, full NAT/CGNAT maturity, ALG &amp; proxy handling, operational management, HA, observability, and NGFW capability across open-source, router/appliance, installable-package, commercial NGFW, carrier-grade CGN, and cloud-native platforms. Sorted by weighted feature score, highest first. Each cell carries a Yes/Partial/No/N-A value plus a V/L/U confidence tag.</div>
+  <div class="statbar">
+    <span><b>34</b> platforms</span><span class="sep">|</span>
+    <span><b>63</b> feature columns</span><span class="sep">|</span>
+    <span><b>2,142</b> assessed cells</span><span class="sep">|</span>
+    <span>Score = Yes(1) + Partial(0.5), summed across all columns</span>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="grp"><span class="lab">Search</span>
+    <input id="search" class="search" type="text" placeholder="Product or engine (e.g. Junos, pf, FortiOS)&#8230;" autocomplete="off"></div>
+  <div class="grp"><span class="lab">Tiers</span><div class="chips"><span class='chip small tierchip-f on' data-tier='OSS Firewall'>OSS Firewall</span>
+<span class='chip small tierchip-f on' data-tier='Router-Firewall'>Router-Firewall</span>
+<span class='chip small tierchip-f on' data-tier='Installable Package'>Installable Package</span>
+<span class='chip small tierchip-f on' data-tier='Commercial NGFW'>Commercial NGFW</span>
+<span class='chip small tierchip-f on' data-tier='Carrier-grade CGN'>Carrier-grade CGN</span>
+<span class='chip small tierchip-f on' data-tier='Cloud-native'>Cloud-native</span></div></div>
+  <div class="grp"><span class="lab">Feature groups (show/hide columns)</span><div class="chips"><span class='chip small catchip catchip on' data-cat='A'>Rule &amp; Policy Management</span>
+<span class='chip small catchip catchip on' data-cat='B'>NAT / CGNAT</span>
+<span class='chip small catchip catchip on' data-cat='G'>ALG &amp; Proxy</span>
+<span class='chip small catchip catchip on' data-cat='C'>Operational Mgmt</span>
+<span class='chip small catchip catchip on' data-cat='D'>HA &amp; Clustering</span>
+<span class='chip small catchip catchip on' data-cat='E'>Observability</span>
+<span class='chip small catchip catchip on' data-cat='F'>NGFW Security</span></div></div>
+  <div class="grp"><span class="lab">Highlight confidence</span><div class="chips">
+      <span class="chip small confchip on" data-conf="all">All</span>
+      <span class="chip small confchip" data-conf="V">Verified</span>
+      <span class="chip small confchip" data-conf="L">Likely</span>
+      <span class="chip small confchip" data-conf="U">Unverified</span></div></div>
+  <div class="grp"><span class="lab">&nbsp;</span><button id="reset" class="btnreset">Reset view</button></div>
+  <div class="count" id="count"></div>
+</div>
+
+<div class="tablecard"><div class="scroller" id="scroller">
+  <table><thead id="thead"></thead><tbody id="tbody"></tbody></table>
+</div></div>
+
+<div class="legend">
+  <div class="grp2"><span style="font-weight:700;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em">Support</span>
+    <span class="item"><span class="lg cy">&#9679;</span> Yes</span>
+    <span class="item"><span class="lg cp">&#9680;</span> Partial</span>
+    <span class="item"><span class="lg cn">&#9675;</span> No</span>
+    <span class="item"><span class="lg ca">&#8211;</span> N/A</span></div>
+  <div class="grp2"><span style="font-weight:700;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em">IDS / IPS marker</span>
+    <span class="item"><span class="lg cy">&#9679;</span><span class="dmark dN" style="position:static">N</span> Built-in (native)</span>
+    <span class="item"><span class="lg cp">&#9680;</span><span class="dmark dA" style="position:static">A</span> Add-on / tier</span>
+    <span class="item"><span class="lg cn">&#9675;</span> None</span></div>
+  <div class="grp2"><span style="font-weight:700;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em">Confidence tag</span>
+    <span class="item"><span class="cbx bV">V</span> Verified</span>
+    <span class="item"><span class="cbx bL">L</span> Likely</span>
+    <span class="item"><span class="cbx bU">U</span> Unverified</span></div>
+  <div class="grp2" style="color:var(--muted);font-size:11.5px">Hover any cell for its full label, value and confidence &#183; hover the <span class="note" style="cursor:default">i</span> for a per-product note.</div>
+</div>
+
+<details class="method">
+  <summary>Methodology, scoring &amp; tier definitions</summary>
+  <div class="body">
+    <h4>How to read the matrix</h4>
+    <p>Two independent dimensions per cell. <b>Support</b> (Yes / Partial / No / N/A) is what the platform can do; <b>Confidence</b> (V / L / U) is how sure the assessment is, and is orthogonal to support. The <b>IDS</b> and <b>IPS</b> columns use a delivery scale instead: <b>Built-in</b> (native, marked <span class="mono">N</span>) / <b>Add-on</b> (separate module, container, or premium tier, marked <span class="mono">A</span>) / <b>None</b>. Sort any column by clicking its header (click again to reverse); the Product and Score headers sort alphabetically and by score.</p>
+
+    <h4>Score</h4>
+    <p>Weighted feature count: each <b>Yes</b> = 1 point, each <b>Partial</b> = 0.5, No and N/A = 0, summed across all 63 feature columns and rounded to one decimal. Products are sorted by this score, highest first. The score is absolute (not normalized), so platforms with many N/A cells - notably cloud-native services whose NAT/ALG functions live in separate managed products - naturally score lower because they support fewer of these specific features.</p>
+
+    <h4>Scoring thresholds by feature group</h4>
+    <div class='cat'><b>Rule &amp; Policy Management.</b> Yes = first-class per-rule counters/grouping exposed in the product's primary interface (GUI or well-supported CLI). Partial = achievable but requires the underlying engine/CLI, a plugin, or a workaround, or is limited in scope. No = not supported. N/A = concept does not apply.</div>
+<div class='cat'><b>NAT / CGNAT.</b> Yes = natively supported and documented. Partial = via add-on/plugin, external module, or limited/experimental support. No = not supported. N/A = the product does not perform this function because it is delivered by a separate platform service (e.g. a cloud NAT gateway). CLI-driven support on a network OS counts as Yes. IP aliasing = more than one public IP bound to a single WAN physical interface (secondary addresses / virtual IPs); on host-based packages this is an OS-level capability rather than a firewall feature.</div>
+<div class='cat'><b>ALG &amp; Proxy.</b> ALG = application-layer gateway that rewrites embedded addresses/ports so the protocol survives NAT/inspection. Yes = native/managed support. Partial = available via an underlying conntrack/session helper, add-on, or limited scope. No = not supported. N/A = the platform performs no NAT, so NAT ALGs do not apply. Proxy columns: Yes = a built-in proxy of that type; Partial = plugin/limited; No = none.</div>
+<div class='cat'><b>Operational Mgmt.</b> Yes = native first-party capability (vendor central manager, documented REST API, official IaC provider, native config rollback / commit model). Partial = community/third-party, limited, or indirect. No = none.</div>
+<div class='cat'><b>HA &amp; Clustering.</b> Yes = native HA/clustering feature. Partial = achievable by pairing with external tooling (keepalived, conntrackd, pacemaker) or limited scope. No = none.</div>
+<div class='cat'><b>Observability.</b> Yes = native export/telemetry. Partial = via add-on package or limited. No = none. SNMP is generally N/A on managed cloud services.</div>
+<div class='cat'><b>NGFW Security.</b> IDS and IPS use a delivery scale - Built-in (native; may be subscription-gated for signatures) / Add-on (separate module, container, or premium tier you must enable) / None. App-ID, TLS/deep inspection, URL filtering and threat feeds use Yes/Partial/No, where Partial = subscription tier or limited depth (e.g. FQDN filtering rather than full app-ID).</div>
+
+    <h4>The two "disabled rule" columns</h4>
+    <p><b>Count retained when disabled</b> = the accumulated hit count survives disabling the rule (history preserved). <b>Disabled-rule monitor (would-match)</b> = a disabled rule still tallies matches without acting. The second is genuinely rare: on most platforms the practical equivalent is an <em>enabled</em> count-only or log-only rule, which is why that column skews toward No / Partial.</p>
+
+    <h4>Tier definitions</h4>
+    
+<ul>
+<li><b>OSS Firewall</b> - dedicated open-source firewall distributions (pfSense CE, OPNsense, IPFire, Endian).</li>
+<li><b>Router-Firewall</b> - platforms whose primary identity is routing but that perform stateful firewalling (OpenWrt, VyOS, MikroTik RouterOS, Ubiquiti EdgeOS, Cisco IOS-XE ZBF).</li>
+<li><b>Installable Package</b> - Linux/Unix packet-filter engines and front-ends installed on a host OS (iptables, nftables, firewalld, ufw, Shorewall, OpenBSD pf, FreeBSD ipfw, ConfigServer CSF).</li>
+<li><b>Commercial NGFW</b> - dedicated commercial security appliances (Palo Alto, FortiGate, Check Point, Cisco FTD, Cisco ASA, Juniper SRX, Sophos, SonicWall, WatchGuard, Barracuda, Forcepoint).</li>
+<li><b>Carrier-grade CGN</b> - platforms built for large-scale / carrier NAT, anchoring the NAT-maturity end (A10 Thunder CGN, F5 BIG-IP CGNAT, Juniper MX).</li>
+<li><b>Cloud-native</b> - managed cloud firewall services (AWS Network Firewall, Azure Firewall, GCP Cloud NGFW).</li>
+</ul>
+
+  </div>
+</details>
+
+<footer class="ft">
+  Generated 2026-07-03 &#183; weighted score = Yes(1) + Partial(0.5) across all 63 feature columns &#183; confidence tags (V/L/U) indicate per-cell assessment certainty.
+</footer>
+
+</div>
+<script>
+const PAYLOAD = {"meta":{"cats":[{"id":"A","label":"Rule &amp; Policy Management","color":"#0F5566"},{"id":"B","label":"NAT / CGNAT","color":"#1A7A8C"},{"id":"G","label":"ALG &amp; Proxy","color":"#2f7d6b"},{"id":"C","label":"Operational Mgmt","color":"#2E4057"},{"id":"D","label":"HA &amp; Clustering","color":"#4a5d73"},{"id":"E","label":"Observability","color":"#3a6b74"},{"id":"F","label":"NGFW Security","color":"#5c6b52"}],"cols":[{"id":"A1","cat":"Rule &amp; Policy Management","label":"Hit counter: packets (enabled rules)"},{"id":"A2","cat":"Rule &amp; Policy Management","label":"Hit counter: bytes"},{"id":"A3","cat":"Rule &amp; Policy Management","label":"Count retained when rule disabled"},{"id":"A4","cat":"Rule &amp; Policy Management","label":"Disabled-rule monitor (would-match count)"},{"id":"A5","cat":"Rule &amp; Policy Management","label":"Last-hit timestamp per rule"},{"id":"A6","cat":"Rule &amp; Policy Management","label":"Counter persists across reboot/commit"},{"id":"A7","cat":"Rule &amp; Policy Management","label":"Manual counter reset"},{"id":"A8","cat":"Rule &amp; Policy Management","label":"Zero-hit / unused-rule detection"},{"id":"A9","cat":"Rule &amp; Policy Management","label":"Rule groups / nested policy"},{"id":"A10","cat":"Rule &amp; Policy Management","label":"Rule scheduling (time-based)"},{"id":"A11","cat":"Rule &amp; Policy Management","label":"Rule metadata / tags / notes"},{"id":"A12","cat":"Rule &amp; Policy Management","label":"Shadow / redundant rule detection"},{"id":"B1","cat":"NAT / CGNAT","label":"SNAT / masquerade"},{"id":"B2","cat":"NAT / CGNAT","label":"DNAT / port forward"},{"id":"B3","cat":"NAT / CGNAT","label":"1:1 / static NAT"},{"id":"NAT_ALIAS","cat":"NAT / CGNAT","label":"IP aliasing (multiple public IPs on one WAN NIC)"},{"id":"B4","cat":"NAT / CGNAT","label":"Outbound NAT mode control"},{"id":"B5","cat":"NAT / CGNAT","label":"NAT reflection / hairpin"},{"id":"B6","cat":"NAT / CGNAT","label":"NAT rule ordering control"},{"id":"B7","cat":"NAT / CGNAT","label":"NPTv6 (prefix translation)"},{"id":"B8","cat":"NAT / CGNAT","label":"NAT66 (stateful IPv6)"},{"id":"B9","cat":"NAT / CGNAT","label":"NAT64 / DNS64"},{"id":"B10","cat":"NAT / CGNAT","label":"464XLAT"},{"id":"B11","cat":"NAT / CGNAT","label":"DS-Lite (AFTR)"},{"id":"B12","cat":"NAT / CGNAT","label":"MAP-T / MAP-E"},{"id":"B13","cat":"NAT / CGNAT","label":"CGNAT / NAT444 (LSN)"},{"id":"B14","cat":"NAT / CGNAT","label":"Deterministic NAT"},{"id":"B15","cat":"NAT / CGNAT","label":"Port block allocation (PBA)"},{"id":"B16","cat":"NAT / CGNAT","label":"Endpoint-Independent Mapping (EIM)"},{"id":"B17","cat":"NAT / CGNAT","label":"Endpoint-Independent Filtering (EIF)"},{"id":"B19","cat":"NAT / CGNAT","label":"NAT / subscriber session logging"},{"id":"B20","cat":"NAT / CGNAT","label":"RADIUS / accounting for NAT"},{"id":"B21","cat":"NAT / CGNAT","label":"Per-subscriber port limits"},{"id":"G1","cat":"ALG &amp; Proxy","label":"FTP ALG"},{"id":"G2","cat":"ALG &amp; Proxy","label":"TFTP ALG"},{"id":"G3","cat":"ALG &amp; Proxy","label":"SIP ALG"},{"id":"G4","cat":"ALG &amp; Proxy","label":"H.323 ALG"},{"id":"G5","cat":"ALG &amp; Proxy","label":"PPTP / GRE ALG"},{"id":"G6","cat":"ALG &amp; Proxy","label":"RTSP ALG"},{"id":"G7","cat":"ALG &amp; Proxy","label":"Transparent proxy"},{"id":"G8","cat":"ALG &amp; Proxy","label":"Explicit web proxy (HTTP/S)"},{"id":"G9","cat":"ALG &amp; Proxy","label":"SMTP / mail proxy"},{"id":"C1","cat":"Operational Mgmt","label":"Centralized multi-device mgmt"},{"id":"C2","cat":"Operational Mgmt","label":"Granular RBAC / admin roles"},{"id":"C3","cat":"Operational Mgmt","label":"REST / programmatic API"},{"id":"C4","cat":"Operational Mgmt","label":"IaC (Terraform / Ansible)"},{"id":"C5","cat":"Operational Mgmt","label":"Config versioning / rollback"},{"id":"C6","cat":"Operational Mgmt","label":"Candidate / commit config model"},{"id":"D1","cat":"HA &amp; Clustering","label":"Active/passive failover"},{"id":"D2","cat":"HA &amp; Clustering","label":"Active/active clustering"},{"id":"D3","cat":"HA &amp; Clustering","label":"Stateful session sync"},{"id":"D4","cat":"HA &amp; Clustering","label":"Config sync between nodes"},{"id":"E1","cat":"Observability","label":"Syslog export"},{"id":"E2","cat":"Observability","label":"NetFlow / IPFIX / sFlow"},{"id":"E3","cat":"Observability","label":"SNMP monitoring"},{"id":"E4","cat":"Observability","label":"Flow / connection logging"},{"id":"E5","cat":"Observability","label":"Native dashboards / reporting"},{"id":"IDS","cat":"NGFW Security","label":"IDS (detection): built-in / add-on / none"},{"id":"IPS","cat":"NGFW Security","label":"IPS (inline prevention): built-in / add-on / none"},{"id":"F2","cat":"NGFW Security","label":"Application identification (app-ID)"},{"id":"F3","cat":"NGFW Security","label":"TLS / deep inspection"},{"id":"F4","cat":"NGFW Security","label":"URL / web filtering"},{"id":"F5","cat":"NGFW Security","label":"Threat intel / IoC feeds"}],"criteria":{"A":"Yes = first-class per-rule counters/grouping exposed in the product's primary interface (GUI or well-supported CLI). Partial = achievable but requires the underlying engine/CLI, a plugin, or a workaround, or is limited in scope. No = not supported. N/A = concept does not apply.","B":"Yes = natively supported and documented. Partial = via add-on/plugin, external module, or limited/experimental support. No = not supported. N/A = the product does not perform this function because it is delivered by a separate platform service (e.g. a cloud NAT gateway). CLI-driven support on a network OS counts as Yes. IP aliasing = more than one public IP bound to a single WAN physical interface (secondary addresses / virtual IPs); on host-based packages this is an OS-level capability rather than a firewall feature.","G":"ALG = application-layer gateway that rewrites embedded addresses/ports so the protocol survives NAT/inspection. Yes = native/managed support. Partial = available via an underlying conntrack/session helper, add-on, or limited scope. No = not supported. N/A = the platform performs no NAT, so NAT ALGs do not apply. Proxy columns: Yes = a built-in proxy of that type; Partial = plugin/limited; No = none.","C":"Yes = native first-party capability (vendor central manager, documented REST API, official IaC provider, native config rollback / commit model). Partial = community/third-party, limited, or indirect. No = none.","D":"Yes = native HA/clustering feature. Partial = achievable by pairing with external tooling (keepalived, conntrackd, pacemaker) or limited scope. No = none.","E":"Yes = native export/telemetry. Partial = via add-on package or limited. No = none. SNMP is generally N/A on managed cloud services.","F":"IDS and IPS use a delivery scale - Built-in (native; may be subscription-gated for signatures) / Add-on (separate module, container, or premium tier you must enable) / None. App-ID, TLS/deep inspection, URL filtering and threat feeds use Yes/Partial/No, where Partial = subscription tier or limited depth (e.g. FQDN filtering rather than full app-ID)."},"tiers":["OSS Firewall","Router-Firewall","Installable Package","Commercial NGFW","Carrier-grade CGN","Cloud-native"],"generated":"2026-07-03","maxscore":51.0,"stats":{"products":34,"columns":63,"cells":2142,"supp":{"y":690,"p":473,"n":925,"a":54},"conf":{"L":1741,"U":259,"V":142}},"special_cols":{"ids":"IDS","ips":"IPS"}},"data":[{"name":"Fortinet FortiGate (FortiOS)","tier":"Commercial NGFW","engine":"FortiOS","version":"7.4 / 7.6 (verify)","license":"Proprietary","note":"IP-pool port block allocation and endpoint-independent (full-cone) options give FortiGate real CGN-adjacent capability (Hyperscale on some models). Confidence Likely - verify exact EIM/EIF and PBA behavior on your model/version.","c":{"A1":"yL","A2":"yL","A3":"pU","A4":"pU","A5":"yL","A6":"pU","A7":"yL","A8":"pL","A9":"pL","A10":"yL","A11":"yL","A12":"pU","B1":"yV","B2":"yV","B3":"yV","B4":"nL","B5":"yL","B6":"yL","B7":"nL","B8":"yL","B9":"yL","B10":"nL","B11":"nL","B12":"nL","B13":"pL","B14":"pL","B15":"yL","B16":"yL","B17":"pL","B19":"yL","B20":"nL","B21":"pL","C1":"yV","C2":"yL","C3":"yV","C4":"yV","C5":"yL","C6":"pU","D1":"yV","D2":"yL","D3":"yV","D4":"yV","E1":"yV","E2":"yL","E3":"yL","E4":"yV","E5":"yV","F2":"yV","F3":"yV","F4":"yV","F5":"yV","NAT_ALIAS":"yL","IDS":"yL","IPS":"yL","G1":"yL","G2":"yL","G3":"yL","G4":"yL","G5":"yL","G6":"yL","G7":"yL","G8":"yL","G9":"pL"},"score":51.0},{"name":"Palo Alto PAN-OS","tier":"Commercial NGFW","engine":"PAN-OS","version":"11.x (verify)","license":"Proprietary","note":"Policy Rule Hit Count (8.1+), Policy Optimizer for unused/shadowed rules, candidate/commit, App-ID, Panorama, official Terraform. Not a CGN platform - CGN sub-features flagged Unverified/Partial. Verify hit-count persistence across disable/reboot.","c":{"A1":"yL","A2":"yL","A3":"yL","A4":"pL","A5":"yL","A6":"pU","A7":"yL","A8":"yL","A9":"yL","A10":"yL","A11":"yL","A12":"pL","B1":"yV","B2":"yV","B3":"yV","B4":"nL","B5":"yL","B6":"yL","B7":"yL","B8":"pU","B9":"yL","B10":"nL","B11":"nL","B12":"nL","B13":"pL","B14":"pU","B15":"pU","B16":"pL","B17":"pU","B19":"yL","B20":"nL","B21":"pU","C1":"yV","C2":"yV","C3":"yV","C4":"yV","C5":"yV","C6":"yV","D1":"yV","D2":"yV","D3":"yV","D4":"yV","E1":"yV","E2":"yL","E3":"yL","E4":"yV","E5":"yV","F2":"yV","F3":"yV","F4":"yV","F5":"yV","NAT_ALIAS":"yL","IDS":"yL","IPS":"yL","G1":"yL","G2":"pU","G3":"yL","G4":"pU","G5":"pU","G6":"pU","G7":"nL","G8":"pL","G9":"nL"},"score":48.5},{"name":"Cisco Secure Firewall (FTD)","tier":"Commercial NGFW","engine":"FTD / Firepower","version":"7.x (verify)","license":"Proprietary","note":"AC-rule hit counts and a 'Monitor' rule action (closest thing to would-match logging). FMC deploy model is candidate/commit-like. Snort IPS + AppID. Not a CGN platform.","c":{"A1":"yL","A2":"pU","A3":"pU","A4":"pL","A5":"pL","A6":"pU","A7":"yL","A8":"yL","A9":"yL","A10":"yL","A11":"yL","A12":"pU","B1":"yV","B2":"yV","B3":"yV","B4":"nL","B5":"pL","B6":"yL","B7":"nL","B8":"nL","B9":"yL","B10":"nL","B11":"nL","B12":"nL","B13":"nL","B14":"nL","B15":"nL","B16":"pU","B17":"nL","B19":"yL","B20":"nL","B21":"nL","C1":"yV","C2":"yL","C3":"yL","C4":"yL","C5":"yL","C6":"pL","D1":"yV","D2":"yL","D3":"yV","D4":"yL","E1":"yV","E2":"yL","E3":"yL","E4":"yV","E5":"yV","F2":"yV","F3":"yL","F4":"yL","F5":"yV","NAT_ALIAS":"yL","IDS":"yL","IPS":"yL","G1":"yL","G2":"yL","G3":"yL","G4":"yL","G5":"pU","G6":"yL","G7":"nL","G8":"nL","G9":"nL"},"score":43.0},{"name":"Juniper SRX (Junos)","tier":"Commercial NGFW","engine":"Junos","version":"23.x / 24.x (verify)","license":"Proprietary","note":"Persistent NAT provides native EIM/EIF; strong ALGs, NAT64, Junos candidate/commit + rollback, and chassis-cluster stateful HA. Full carrier CGN (deterministic/PBA/subscriber logging) is more an MX capability than SRX - flagged accordingly.","c":{"A1":"yL","A2":"yL","A3":"pU","A4":"nL","A5":"nL","A6":"nL","A7":"yL","A8":"pL","A9":"pL","A10":"yL","A11":"yL","A12":"nL","B1":"yV","B2":"yV","B3":"yV","B4":"nL","B5":"pL","B6":"yL","B7":"nL","B8":"nL","B9":"yL","B10":"nL","B11":"nL","B12":"nL","B13":"nL","B14":"nL","B15":"nL","B16":"yL","B17":"yL","B19":"yL","B20":"nL","B21":"nL","C1":"yL","C2":"yL","C3":"yL","C4":"yL","C5":"yV","C6":"yV","D1":"yV","D2":"yL","D3":"yV","D4":"yL","E1":"yV","E2":"yL","E3":"yV","E4":"yL","E5":"pL","F2":"yV","F3":"yL","F4":"yL","F5":"yL","NAT_ALIAS":"yL","IDS":"yL","IPS":"yL","G1":"yL","G2":"yL","G3":"yL","G4":"yL","G5":"pU","G6":"yL","G7":"nL","G8":"nL","G9":"nL"},"score":42.0},{"name":"Check Point (Gaia)","tier":"Commercial NGFW","engine":"Gaia","version":"R81.x (verify)","license":"Proprietary","note":"Ordered/Inline Layers and Sections are strong policy grouping; Hit Count identifies unused rules; Management API + sessions/publish model. Not a CGN box.","c":{"A1":"yL","A2":"pU","A3":"pU","A4":"nL","A5":"pL","A6":"pL","A7":"yL","A8":"yL","A9":"yL","A10":"yL","A11":"yL","A12":"pU","B1":"yV","B2":"yV","B3":"yV","B4":"yL","B5":"pL","B6":"yL","B7":"nL","B8":"nL","B9":"pU","B10":"nL","B11":"nL","B12":"nL","B13":"nL","B14":"nL","B15":"nL","B16":"nL","B17":"nL","B19":"yL","B20":"nL","B21":"nL","C1":"yV","C2":"yV","C3":"yV","C4":"yL","C5":"yL","C6":"yL","D1":"yV","D2":"yL","D3":"yV","D4":"yL","E1":"yL","E2":"pU","E3":"yL","E4":"yV","E5":"yV","F2":"yV","F3":"yV","F4":"yV","F5":"yV","NAT_ALIAS":"yL","IDS":"yL","IPS":"yL","G1":"yL","G2":"pU","G3":"yL","G4":"pU","G5":"nL","G6":"pU","G7":"pL","G8":"pL","G9":"nL"},"score":41.5},{"name":"F5 BIG-IP (CGNAT/LSN)","tier":"Carrier-grade CGN","engine":"TMOS","version":"17.x (verify)","license":"Proprietary","note":"CGNAT/LSN module: deterministic NAT, PBA, EIM/EIF, DS-Lite, NAT64, high-speed logging (HSL). Rule paradigm is AFM (Partial/Unverified here). iControl REST + BIG-IQ. NGFW columns reflect AFM/SSL-Orchestrator overlap, not a classic NGFW.","c":{"A1":"pL","A2":"pU","A3":"nU","A4":"nU","A5":"nU","A6":"nU","A7":"nU","A8":"nU","A9":"pU","A10":"pU","A11":"yL","A12":"nU","B1":"yL","B2":"yL","B3":"yL","B4":"nL","B5":"pU","B6":"pU","B7":"nL","B8":"nL","B9":"yL","B10":"pL","B11":"yL","B12":"nL","B13":"yL","B14":"yL","B15":"yL","B16":"yL","B17":"yL","B19":"yL","B20":"pU","B21":"yL","C1":"yL","C2":"yL","C3":"yV","C4":"yL","C5":"pL","C6":"nL","D1":"yV","D2":"yL","D3":"yL","D4":"yV","E1":"yL","E2":"yL","E3":"yL","E4":"yL","E5":"yL","F2":"nL","F3":"pL","F4":"pU","F5":"pU","NAT_ALIAS":"yL","IDS":"pU","IPS":"pU","G1":"yL","G2":"yL","G3":"yL","G4":"nL","G5":"nL","G6":"yL","G7":"yL","G8":"yL","G9":"pU"},"score":40.5},{"name":"Juniper MX (carrier)","tier":"Carrier-grade CGN","engine":"Junos","version":"23.x / 24.x (verify)","license":"Proprietary","note":"Top-tier carrier CGN via inline / MS-MPC / MX-SPC3: deterministic NAT + secured PBA, EIM/EIF, DS-Lite/NAT64/MAP, subscriber logging. Junos candidate/commit + rollback. Firewall-filter counters, not security-policy hit counts. Router, not NGFW.","c":{"A1":"yL","A2":"yL","A3":"pU","A4":"nL","A5":"nL","A6":"nL","A7":"yL","A8":"pU","A9":"pL","A10":"nL","A11":"pL","A12":"nL","B1":"yL","B2":"yL","B3":"yL","B4":"nL","B5":"pU","B6":"yL","B7":"nL","B8":"nL","B9":"yL","B10":"pL","B11":"yL","B12":"pL","B13":"yL","B14":"yL","B15":"yL","B16":"yL","B17":"yL","B19":"yL","B20":"pL","B21":"yL","C1":"yL","C2":"yL","C3":"yL","C4":"yL","C5":"yV","C6":"yV","D1":"yL","D2":"nL","D3":"pL","D4":"pU","E1":"yL","E2":"yL","E3":"yV","E4":"yL","E5":"yL","F2":"nL","F3":"nL","F4":"nL","F5":"nL","NAT_ALIAS":"yV","IDS":"pU","IPS":"pU","G1":"yL","G2":"yL","G3":"yL","G4":"nL","G5":"yL","G6":"yL","G7":"nL","G8":"nL","G9":"nL"},"score":40.0},{"name":"Cisco IOS-XE (Zone-Based FW)","tier":"Router-Firewall","engine":"IOS-XE","version":"17.x (verify)","license":"Proprietary","note":"Higher-end platforms (ASR / some ISR) carry CGN/NAT444 and PBA - support is platform- and license-dependent, so I've flagged those Unverified. NBAR2 gives app recognition; Snort IPS via UTD container.","c":{"A1":"yL","A2":"yL","A3":"pU","A4":"nL","A5":"nL","A6":"nL","A7":"yL","A8":"pL","A9":"pL","A10":"yL","A11":"pL","A12":"nL","B1":"yV","B2":"yV","B3":"yV","B4":"nL","B5":"pL","B6":"pL","B7":"nL","B8":"nL","B9":"yL","B10":"pU","B11":"pU","B12":"nL","B13":"pL","B14":"pU","B15":"pU","B16":"pU","B17":"pU","B19":"yL","B20":"nL","B21":"pU","C1":"pL","C2":"yL","C3":"yL","C4":"pL","C5":"yL","C6":"pL","D1":"yL","D2":"nL","D3":"pU","D4":"nL","E1":"yL","E2":"yL","E3":"yL","E4":"yL","E5":"pL","F2":"yL","F3":"pL","F4":"pL","F5":"pL","NAT_ALIAS":"yV","IDS":"pL","IPS":"pL","G1":"yL","G2":"yL","G3":"yL","G4":"yL","G5":"yL","G6":"yL","G7":"nL","G8":"nL","G9":"nL"},"score":37.0},{"name":"Sophos Firewall (SFOS)","tier":"Commercial NGFW","engine":"SFOS","version":"20 / 21 (verify)","license":"Proprietary","note":"Native firewall rule groups and full NGFW stack; Sophos Central for cloud mgmt. I have limited verified detail on per-rule hit counters - flagged Unverified. Not a CGN box.","c":{"A1":"pU","A2":"pU","A3":"pU","A4":"nU","A5":"nU","A6":"nU","A7":"pU","A8":"pU","A9":"yL","A10":"yL","A11":"yL","A12":"pU","B1":"yL","B2":"yL","B3":"yL","B4":"nL","B5":"pL","B6":"yL","B7":"nL","B8":"nL","B9":"nL","B10":"nL","B11":"nL","B12":"nL","B13":"nL","B14":"nL","B15":"nL","B16":"nL","B17":"nL","B19":"yL","B20":"nL","B21":"nL","C1":"yL","C2":"yL","C3":"pL","C4":"nL","C5":"pU","C6":"nL","D1":"yL","D2":"pL","D3":"pL","D4":"yL","E1":"yL","E2":"pL","E3":"yL","E4":"yL","E5":"yL","F2":"yL","F3":"yL","F4":"yL","F5":"yL","NAT_ALIAS":"yL","IDS":"yL","IPS":"yL","G1":"yL","G2":"nL","G3":"pU","G4":"nL","G5":"nL","G6":"nL","G7":"yL","G8":"yL","G9":"yL"},"score":33.5},{"name":"A10 Thunder CGN","tier":"Carrier-grade CGN","engine":"ACOS","version":"5.x (verify)","license":"Proprietary","note":"Purpose-built CGN: deterministic NAT, port block allocation, EIM/EIF, DS-Lite/NAT64/464XLAT, and high-volume NAT logging are its core - all Likely (I can't verify exact ACOS specifics/versions). Rule-management block is not its focus and is largely Unverified. Not an NGFW.","c":{"A1":"pU","A2":"pU","A3":"nU","A4":"nU","A5":"nU","A6":"nU","A7":"pU","A8":"nU","A9":"nU","A10":"nU","A11":"nU","A12":"nU","B1":"yL","B2":"yL","B3":"yL","B4":"nL","B5":"pU","B6":"pU","B7":"nL","B8":"nL","B9":"yL","B10":"yL","B11":"yL","B12":"pL","B13":"yL","B14":"yL","B15":"yL","B16":"yL","B17":"yL","B19":"yL","B20":"pL","B21":"yL","C1":"pL","C2":"pL","C3":"yL","C4":"nU","C5":"pU","C6":"nU","D1":"yL","D2":"pL","D3":"pL","D4":"nU","E1":"yL","E2":"yL","E3":"yL","E4":"yL","E5":"yL","F2":"nL","F3":"nL","F4":"nL","F5":"nL","NAT_ALIAS":"yL","IDS":"nL","IPS":"nL","G1":"yL","G2":"yL","G3":"yL","G4":"yL","G5":"yL","G6":"yL","G7":"nL","G8":"nL","G9":"nL"},"score":33.0},{"name":"OPNsense","tier":"OSS Firewall","engine":"FreeBSD / pf","version":"25.x (verify)","license":"BSD-2-Clause","note":"First-class documented REST API and rule categories (grouping). Suricata IDS/IPS is built in. No CGN sub-features.","c":{"A1":"yL","A2":"yL","A3":"nL","A4":"nL","A5":"nL","A6":"nL","A7":"yL","A8":"pL","A9":"yL","A10":"yL","A11":"yL","A12":"nL","B1":"yV","B2":"yV","B3":"yV","B4":"yL","B5":"yL","B6":"yL","B7":"yL","B8":"nL","B9":"nL","B10":"nL","B11":"nL","B12":"nL","B13":"nL","B14":"nL","B15":"nL","B16":"pU","B17":"pU","B19":"pL","B20":"nL","B21":"nL","C1":"nL","C2":"pL","C3":"yV","C4":"pL","C5":"yV","C6":"nL","D1":"yL","D2":"nL","D3":"yL","D4":"yL","E1":"yV","E2":"pL","E3":"yL","E4":"pL","E5":"yL","F2":"pL","F3":"pL","F4":"pL","F5":"pL","NAT_ALIAS":"yV","IDS":"yL","IPS":"yL","G1":"yL","G2":"nL","G3":"pU","G4":"nL","G5":"nL","G6":"nL","G7":"pL","G8":"pL","G9":"nL"},"score":32.5},{"name":"Forcepoint NGFW","tier":"Commercial NGFW","engine":"Forcepoint (Stonesoft)","version":"6.x / 7.x (verify)","license":"Proprietary","note":"SMC (Security Management Center) and native multi-node active/active clustering are strengths. Rule-management UX detail flagged Unverified. Not a CGN box.","c":{"A1":"nU","A2":"nU","A3":"nU","A4":"nU","A5":"nU","A6":"nU","A7":"nU","A8":"nU","A9":"nU","A10":"nU","A11":"yL","A12":"nU","B1":"yL","B2":"yL","B3":"yL","B4":"nL","B5":"pL","B6":"yL","B7":"nL","B8":"nL","B9":"nL","B10":"nL","B11":"nL","B12":"nL","B13":"nL","B14":"nL","B15":"nL","B16":"nL","B17":"nL","B19":"yL","B20":"nL","B21":"nL","C1":"yL","C2":"yL","C3":"yL","C4":"nL","C5":"yL","C6":"pU","D1":"yL","D2":"yL","D3":"yL","D4":"yL","E1":"yL","E2":"yL","E3":"yL","E4":"yL","E5":"yL","F2":"yL","F3":"yL","F4":"yL","F5":"yL","NAT_ALIAS":"yL","IDS":"yL","IPS":"yL","G1":"yL","G2":"nL","G3":"yL","G4":"nL","G5":"nL","G6":"nL","G7":"pL","G8":"yL","G9":"pU"},"score":31.0},{"name":"SonicWall (SonicOS)","tier":"Commercial NGFW","engine":"SonicOS","version":"7.x (verify)","license":"Proprietary","note":"Flexible NAT policies and full NGFW (App Control, DPI-SSL, CFS); NSM/GMS central mgmt; IPFIX with extensions. Per-rule counter detail flagged Unverified.","c":{"A1":"pU","A2":"pU","A3":"pU","A4":"nU","A5":"nU","A6":"nU","A7":"pU","A8":"pU","A9":"pU","A10":"yL","A11":"yL","A12":"pU","B1":"yL","B2":"yL","B3":"yL","B4":"nL","B5":"pL","B6":"yL","B7":"nL","B8":"nL","B9":"nL","B10":"nL","B11":"nL","B12":"nL","B13":"nL","B14":"nL","B15":"nL","B16":"nL","B17":"nL","B19":"yL","B20":"nL","B21":"nL","C1":"yL","C2":"yL","C3":"pL","C4":"nL","C5":"pU","C6":"nL","D1":"yL","D2":"nL","D3":"pL","D4":"yL","E1":"yL","E2":"yL","E3":"yL","E4":"yL","E5":"yL","F2":"yL","F3":"yL","F4":"yL","F5":"yL","NAT_ALIAS":"yL","IDS":"yL","IPS":"yL","G1":"yL","G2":"nL","G3":"yL","G4":"pU","G5":"nL","G6":"nL","G7":"nL","G8":"nL","G9":"nL"},"score":31.0},{"name":"Cisco ASA","tier":"Commercial NGFW","engine":"ASA","version":"9.x (verify)","license":"Proprietary","note":"Included as the stateful-firewall contrast: strong classic NAT (twice/object NAT) and ACE hit counts, but no native NGFW inspection (IPS/app-ID/URL/TLS) - those needed the legacy modules or Firepower. No config versioning natively.","c":{"A1":"yV","A2":"pU","A3":"nL","A4":"nL","A5":"pL","A6":"nL","A7":"yV","A8":"pL","A9":"pL","A10":"yL","A11":"yL","A12":"nL","B1":"yV","B2":"yV","B3":"yV","B4":"nL","B5":"pL","B6":"yL","B7":"nL","B8":"nL","B9":"yL","B10":"nL","B11":"nL","B12":"nL","B13":"nL","B14":"nL","B15":"nL","B16":"pU","B17":"nL","B19":"yL","B20":"nL","B21":"nL","C1":"pL","C2":"yL","C3":"pL","C4":"pL","C5":"nL","C6":"nL","D1":"yV","D2":"yL","D3":"yV","D4":"yV","E1":"yV","E2":"yL","E3":"yL","E4":"yL","E5":"pL","F2":"nL","F3":"nL","F4":"nL","F5":"nL","NAT_ALIAS":"pL","IDS":"nL","IPS":"nL","G1":"yL","G2":"yL","G3":"yL","G4":"yL","G5":"pU","G6":"yL","G7":"nL","G8":"nL","G9":"nL"},"score":30.0},{"name":"pfSense CE","tier":"OSS Firewall","engine":"FreeBSD / pf","version":"2.7.x (verify)","license":"Apache 2.0","note":"NAT is edge/SMB-grade (auto/hybrid/manual outbound NAT, NPt); no CGN tooling. IPS/URL/TLS are package-provided (Snort/Suricata, Squid, pfBlockerNG), hence Partial.","c":{"A1":"yL","A2":"yL","A3":"nL","A4":"nL","A5":"nL","A6":"nL","A7":"yL","A8":"pL","A9":"pL","A10":"yV","A11":"yL","A12":"nL","B1":"yV","B2":"yV","B3":"yV","B4":"yV","B5":"yV","B6":"yL","B7":"yL","B8":"nL","B9":"nL","B10":"nL","B11":"nL","B12":"nL","B13":"nL","B14":"nL","B15":"nL","B16":"pU","B17":"pU","B19":"pL","B20":"nL","B21":"nL","C1":"nL","C2":"pL","C3":"pL","C4":"pU","C5":"yV","C6":"nL","D1":"yV","D2":"nL","D3":"yV","D4":"yV","E1":"yV","E2":"pL","E3":"yL","E4":"pL","E5":"yL","F2":"pL","F3":"pL","F4":"pL","F5":"pL","NAT_ALIAS":"yV","IDS":"pL","IPS":"pL","G1":"yL","G2":"nL","G3":"nL","G4":"nL","G5":"nL","G6":"nL","G7":"pL","G8":"pL","G9":"nL"},"score":30.0},{"name":"VyOS","tier":"Router-Firewall","engine":"Linux / nftables","version":"1.4 / 1.5 (verify)","license":"GPL-2.0","note":"Junos-like candidate/commit + rollback is a genuine strength; HTTP API and strong IaC posture. NAT66/NPTv6 present; CGN sub-features (deterministic/PBA) not to my knowledge. CLI-only (no GUI dashboard).","c":{"A1":"yL","A2":"yL","A3":"pU","A4":"nL","A5":"nL","A6":"nL","A7":"yL","A8":"nL","A9":"yL","A10":"nL","A11":"yL","A12":"nL","B1":"yV","B2":"yV","B3":"yL","B4":"nL","B5":"pL","B6":"yL","B7":"pL","B8":"yL","B9":"pU","B10":"nL","B11":"nL","B12":"nL","B13":"nL","B14":"nL","B15":"nL","B16":"nL","B17":"nL","B19":"pL","B20":"nL","B21":"nL","C1":"nL","C2":"pL","C3":"yL","C4":"yL","C5":"yV","C6":"yV","D1":"yL","D2":"nL","D3":"yL","D4":"pL","E1":"yL","E2":"yL","E3":"yL","E4":"yL","E5":"nL","F2":"nU","F3":"nU","F4":"nU","F5":"nU","NAT_ALIAS":"yV","IDS":"pU","IPS":"pU","G1":"pL","G2":"pL","G3":"pL","G4":"pL","G5":"pL","G6":"nL","G7":"pL","G8":"pL","G9":"nL"},"score":29.0},{"name":"WatchGuard (Fireware)","tier":"Commercial NGFW","engine":"Fireware","version":"12.x (verify)","license":"Proprietary","note":"Full NGFW with WatchGuard Cloud/Dimension mgmt and FireCluster HA. I have limited verified detail on rule-management internals - much of block A is Unverified. Not a CGN box.","c":{"A1":"nU","A2":"nU","A3":"nU","A4":"nU","A5":"nU","A6":"nU","A7":"nU","A8":"nU","A9":"pU","A10":"yL","A11":"yL","A12":"nU","B1":"yL","B2":"yL","B3":"yL","B4":"nL","B5":"pL","B6":"yL","B7":"nL","B8":"nL","B9":"nL","B10":"nL","B11":"nL","B12":"nL","B13":"nL","B14":"nL","B15":"nL","B16":"nL","B17":"nL","B19":"yL","B20":"nL","B21":"nL","C1":"yL","C2":"pL","C3":"nL","C4":"nL","C5":"pU","C6":"nL","D1":"yL","D2":"pL","D3":"pU","D4":"yL","E1":"yL","E2":"pU","E3":"yL","E4":"yL","E5":"yL","F2":"yL","F3":"yL","F4":"yL","F5":"yL","NAT_ALIAS":"yL","IDS":"yL","IPS":"yL","G1":"yL","G2":"nL","G3":"pU","G4":"nL","G5":"nL","G6":"nL","G7":"yL","G8":"yL","G9":"yL"},"score":29.0},{"name":"Barracuda CloudGen Firewall","tier":"Commercial NGFW","engine":"CloudGen OS","version":"9.x (verify)","license":"Proprietary","note":"Firewall Control Center for centralized mgmt; strong SD-WAN heritage. Rule-management specifics flagged Unverified. Not a CGN platform.","c":{"A1":"nU","A2":"nU","A3":"nU","A4":"nU","A5":"nU","A6":"nU","A7":"nU","A8":"nU","A9":"nU","A10":"pU","A11":"yL","A12":"nU","B1":"yL","B2":"yL","B3":"yL","B4":"nL","B5":"pL","B6":"yL","B7":"nL","B8":"nL","B9":"nL","B10":"nL","B11":"nL","B12":"nL","B13":"nL","B14":"nL","B15":"nL","B16":"nL","B17":"nL","B19":"yL","B20":"nL","B21":"nL","C1":"yL","C2":"yL","C3":"pL","C4":"nL","C5":"pL","C6":"nL","D1":"yL","D2":"pU","D3":"pU","D4":"yL","E1":"yL","E2":"pU","E3":"yL","E4":"yL","E5":"yL","F2":"yL","F3":"yL","F4":"yL","F5":"yL","NAT_ALIAS":"yL","IDS":"yL","IPS":"yL","G1":"yL","G2":"nL","G3":"yL","G4":"nL","G5":"nL","G6":"nL","G7":"nL","G8":"pL","G9":"yL"},"score":28.0},{"name":"MikroTik RouterOS","tier":"Router-Firewall","engine":"RouterOS (Linux)","version":"7.x (verify)","license":"Proprietary (free)","note":"Disabled rules retain their counters (rule object persists) - one of the few that does A3 well. No config versioning/rollback (export/backup only). No native state sync.","c":{"A1":"yV","A2":"yV","A3":"yL","A4":"nL","A5":"nL","A6":"nL","A7":"yL","A8":"nL","A9":"pL","A10":"pL","A11":"yL","A12":"nL","B1":"yV","B2":"yV","B3":"yL","B4":"nL","B5":"pL","B6":"yL","B7":"nL","B8":"nL","B9":"nL","B10":"nL","B11":"nL","B12":"nL","B13":"pL","B14":"nL","B15":"nL","B16":"pU","B17":"pU","B19":"pL","B20":"nL","B21":"nL","C1":"pL","C2":"pL","C3":"yL","C4":"pL","C5":"nL","C6":"nL","D1":"yL","D2":"nL","D3":"nL","D4":"nL","E1":"yL","E2":"yL","E3":"yL","E4":"pL","E5":"pL","F2":"nL","F3":"nL","F4":"nL","F5":"nL","NAT_ALIAS":"yV","IDS":"nL","IPS":"nL","G1":"yL","G2":"yL","G3":"yL","G4":"yL","G5":"yL","G6":"pU","G7":"pL","G8":"pL","G9":"nL"},"score":27.5},{"name":"Azure Firewall","tier":"Cloud-native","engine":"Managed","version":"Managed (verify)","license":"Managed service","note":"Unlike AWS NF, Azure Firewall does its own SNAT (outbound) and DNAT, so some NAT cells apply; IPv6 support is limited (verify). Rule Collection Groups provide grouping. IDPS/TLS inspection are Premium-tier. SNAT port exhaustion is a known constraint.","c":{"A1":"pU","A2":"pU","A3":"nL","A4":"nL","A5":"nL","A6":"nL","A7":"nL","A8":"nL","A9":"yL","A10":"nL","A11":"pL","A12":"nL","B1":"yL","B2":"yL","B3":"pU","B4":"nL","B5":"pU","B6":"pL","B7":"nL","B8":"nL","B9":"nL","B10":"nL","B11":"nL","B12":"nL","B13":"nL","B14":"nL","B15":"nL","B16":"pU","B17":"nL","B19":"pL","B20":"nL","B21":"pU","C1":"yL","C2":"yL","C3":"yV","C4":"yV","C5":"pL","C6":"pU","D1":"yL","D2":"pU","D3":"pU","D4":"nU","E1":"yL","E2":"pU","E3":"nL","E4":"yL","E5":"pL","F2":"pL","F3":"pL","F4":"yL","F5":"yL","NAT_ALIAS":"yL","IDS":"pL","IPS":"pL","G1":"pU","G2":"nL","G3":"nL","G4":"nL","G5":"nL","G6":"nL","G7":"nL","G8":"nL","G9":"nL"},"score":23.0},{"name":"OpenWrt (firewall4)","tier":"Router-Firewall","engine":"Linux / nftables","version":"23.05 / 24.10 (verify)","license":"GPL-2.0","note":"Notable for IPv6 transition via packages: MAP-E/MAP-T, DS-Lite, and Jool-based NAT64/464XLAT are add-ons (Partial). Management is UCI/ubus, not REST.","c":{"A1":"pL","A2":"pL","A3":"nL","A4":"nL","A5":"nL","A6":"nL","A7":"pL","A8":"nL","A9":"pL","A10":"pU","A11":"yL","A12":"nL","B1":"yL","B2":"yL","B3":"pL","B4":"nL","B5":"pL","B6":"pL","B7":"nL","B8":"nL","B9":"pL","B10":"pL","B11":"yL","B12":"yL","B13":"nL","B14":"nL","B15":"nL","B16":"nL","B17":"nL","B19":"pL","B20":"nL","B21":"nL","C1":"nL","C2":"nL","C3":"pL","C4":"pU","C5":"pL","C6":"nL","D1":"pL","D2":"nL","D3":"pL","D4":"nL","E1":"yL","E2":"pL","E3":"pL","E4":"pL","E5":"pL","F2":"nL","F3":"nL","F4":"pL","F5":"pL","NAT_ALIAS":"yL","IDS":"pL","IPS":"pL","G1":"pL","G2":"pU","G3":"pU","G4":"nL","G5":"pU","G6":"nL","G7":"nL","G8":"nL","G9":"nL"},"score":21.0},{"name":"iptables (netfilter)","tier":"Installable Package","engine":"Linux netfilter","version":"1.8.x (verify)","license":"GPL-2.0","note":"Per-rule packet/byte counters are native (iptables -vL); no rule 'disable' state, so A3/A4 don't apply. HA/state-sync only via external keepalived/conntrackd. No NGFW.","c":{"A1":"yV","A2":"yV","A3":"nL","A4":"nL","A5":"nL","A6":"nL","A7":"yV","A8":"pL","A9":"pL","A10":"yL","A11":"pL","A12":"nL","B1":"yV","B2":"yV","B3":"yL","B4":"pL","B5":"pL","B6":"yL","B7":"pU","B8":"yL","B9":"nL","B10":"nL","B11":"nL","B12":"nL","B13":"pU","B14":"nL","B15":"nL","B16":"pU","B17":"pU","B19":"pL","B20":"nL","B21":"nL","C1":"nL","C2":"nL","C3":"nL","C4":"pL","C5":"nL","C6":"nL","D1":"pL","D2":"nL","D3":"pL","D4":"nL","E1":"yL","E2":"nL","E3":"nL","E4":"pL","E5":"nL","F2":"nL","F3":"nL","F4":"nL","F5":"nL","NAT_ALIAS":"yL","IDS":"nL","IPS":"nL","G1":"pL","G2":"pL","G3":"pL","G4":"pL","G5":"pL","G6":"nL","G7":"nL","G8":"nL","G9":"nL"},"score":20.5},{"name":"nftables (netfilter)","tier":"Installable Package","engine":"Linux netfilter","version":"1.0.x (verify)","license":"GPL-2.0","note":"Counters are opt-in (explicit 'counter' statement) but native. Named sets improve object grouping vs iptables. Same external-tooling story for HA.","c":{"A1":"yL","A2":"yL","A3":"nL","A4":"nL","A5":"nL","A6":"nL","A7":"yL","A8":"pL","A9":"pL","A10":"pU","A11":"yL","A12":"nL","B1":"yV","B2":"yV","B3":"yL","B4":"pL","B5":"pL","B6":"yL","B7":"pU","B8":"yL","B9":"nL","B10":"nL","B11":"nL","B12":"nL","B13":"pU","B14":"nL","B15":"nL","B16":"pU","B17":"pU","B19":"pL","B20":"nL","B21":"nL","C1":"nL","C2":"nL","C3":"nL","C4":"pL","C5":"nL","C6":"nL","D1":"pL","D2":"nL","D3":"pL","D4":"nL","E1":"yL","E2":"nL","E3":"nL","E4":"pL","E5":"nL","F2":"nL","F3":"nL","F4":"nL","F5":"nL","NAT_ALIAS":"yL","IDS":"nL","IPS":"nL","G1":"pL","G2":"pL","G3":"pL","G4":"pL","G5":"pL","G6":"nL","G7":"nL","G8":"nL","G9":"nL"},"score":20.5},{"name":"Endian Firewall Community","tier":"OSS Firewall","engine":"Linux / iptables","version":"3.3.x (verify)","license":"GPL-2.0","note":"UTM-style distro; I have limited verified detail on the current community edition - many cells are Unverified. HA may be appliance/enterprise-only.","c":{"A1":"pU","A2":"pU","A3":"nU","A4":"nU","A5":"nU","A6":"nU","A7":"pU","A8":"nU","A9":"pU","A10":"nU","A11":"yL","A12":"nU","B1":"yL","B2":"yL","B3":"yL","B4":"nL","B5":"pU","B6":"nL","B7":"nL","B8":"nL","B9":"nL","B10":"nL","B11":"nL","B12":"nL","B13":"nL","B14":"nL","B15":"nL","B16":"nL","B17":"nL","B19":"pL","B20":"nL","B21":"nL","C1":"pU","C2":"nU","C3":"nU","C4":"nU","C5":"pL","C6":"nU","D1":"nU","D2":"nU","D3":"nU","D4":"nU","E1":"yL","E2":"pU","E3":"pU","E4":"pU","E5":"yL","F2":"pU","F3":"pL","F4":"yL","F5":"pL","NAT_ALIAS":"pU","IDS":"yL","IPS":"yL","G1":"pL","G2":"nL","G3":"nL","G4":"nL","G5":"nL","G6":"nL","G7":"yL","G8":"yL","G9":"yL"},"score":20.0},{"name":"OpenBSD pf","tier":"Installable Package","engine":"OpenBSD","version":"OpenBSD 7.x (verify)","license":"ISC/BSD","note":"Reference pf: native per-rule counters, anchors (rule grouping), binat (1:1), and af-to (NAT64). CARP/pfsync give native HA/state-sync; pflow exports NetFlow. No management API.","c":{"A1":"yV","A2":"yV","A3":"nL","A4":"nL","A5":"nL","A6":"nL","A7":"yV","A8":"pL","A9":"pL","A10":"nL","A11":"yL","A12":"nL","B1":"yV","B2":"yV","B3":"yV","B4":"nL","B5":"pL","B6":"yL","B7":"nL","B8":"pL","B9":"yL","B10":"nL","B11":"nL","B12":"nL","B13":"nL","B14":"nL","B15":"nL","B16":"pU","B17":"pU","B19":"yL","B20":"nL","B21":"pU","C1":"nL","C2":"nL","C3":"nL","C4":"nL","C5":"nL","C6":"nL","D1":"yL","D2":"nL","D3":"yL","D4":"nL","E1":"yL","E2":"pL","E3":"nL","E4":"pL","E5":"nL","F2":"nL","F3":"nL","F4":"nL","F5":"nL","NAT_ALIAS":"yL","IDS":"nL","IPS":"nL","G1":"yL","G2":"nL","G3":"nL","G4":"nL","G5":"nL","G6":"nL","G7":"nL","G8":"nL","G9":"nL"},"score":19.5},{"name":"Ubiquiti EdgeOS","tier":"Router-Firewall","engine":"Vyatta fork (Linux)","version":"2.x / 3.x (verify)","license":"Proprietary","note":"Vyatta-lineage CLI with firewall object-groups. Central mgmt via UISP/UNMS. DPI is identification/stats only, not enforcement.","c":{"A1":"yL","A2":"yL","A3":"pU","A4":"nL","A5":"nL","A6":"nL","A7":"pL","A8":"nL","A9":"yL","A10":"nL","A11":"pL","A12":"nL","B1":"yL","B2":"yL","B3":"yL","B4":"nL","B5":"pL","B6":"yL","B7":"nL","B8":"nL","B9":"nL","B10":"nL","B11":"nL","B12":"nL","B13":"nL","B14":"nL","B15":"nL","B16":"nL","B17":"nL","B19":"pL","B20":"nL","B21":"nL","C1":"pL","C2":"pU","C3":"pU","C4":"pU","C5":"pL","C6":"pL","D1":"yL","D2":"nL","D3":"nL","D4":"nL","E1":"yL","E2":"pL","E3":"yL","E4":"pL","E5":"pL","F2":"pL","F3":"nL","F4":"nL","F5":"nL","NAT_ALIAS":"yL","IDS":"nL","IPS":"nL","G1":"pU","G2":"nL","G3":"pU","G4":"nL","G5":"nL","G6":"nL","G7":"nL","G8":"nL","G9":"nL"},"score":19.5},{"name":"FreeBSD ipfw","tier":"Installable Package","engine":"FreeBSD","version":"FreeBSD 14 (verify)","license":"BSD-2-Clause","note":"Strong IPv6 transition/CGN via nat64lsn (LSN-style), nat64stl, and nat64clat (464XLAT) - a real differentiator among packages. Rule sets provide grouping; ipfw -t shows last-match time.","c":{"A1":"yV","A2":"yV","A3":"nL","A4":"nL","A5":"pL","A6":"nL","A7":"yV","A8":"pL","A9":"yL","A10":"nL","A11":"pU","A12":"nL","B1":"yL","B2":"yL","B3":"pL","B4":"nL","B5":"pL","B6":"yL","B7":"nL","B8":"nL","B9":"yL","B10":"pL","B11":"nL","B12":"nL","B13":"pL","B14":"nL","B15":"nL","B16":"nL","B17":"nL","B19":"pL","B20":"nL","B21":"pU","C1":"nL","C2":"nL","C3":"nL","C4":"nL","C5":"nL","C6":"nL","D1":"pL","D2":"nL","D3":"pU","D4":"nL","E1":"yL","E2":"nL","E3":"nL","E4":"pL","E5":"nL","F2":"nL","F3":"nL","F4":"nL","F5":"nL","NAT_ALIAS":"yL","IDS":"nL","IPS":"nL","G1":"yL","G2":"nL","G3":"nL","G4":"nL","G5":"pL","G6":"nL","G7":"nL","G8":"nL","G9":"nL"},"score":17.5},{"name":"IPFire","tier":"OSS Firewall","engine":"Linux / iptables","version":"2.29 Core (verify)","license":"GPL-3.0","note":"iptables counters exist underneath but rule-level exposure in the GUI is limited. Suricata IPS and blocklists are built in. No HA in the community build (verify).","c":{"A1":"pL","A2":"pL","A3":"nL","A4":"nL","A5":"nL","A6":"nL","A7":"pL","A8":"nL","A9":"pL","A10":"nL","A11":"pL","A12":"nL","B1":"yL","B2":"yL","B3":"pL","B4":"nL","B5":"pU","B6":"pL","B7":"nL","B8":"nL","B9":"nL","B10":"nL","B11":"nL","B12":"nL","B13":"nL","B14":"nL","B15":"nL","B16":"nL","B17":"nL","B19":"pL","B20":"nL","B21":"nL","C1":"nL","C2":"nL","C3":"nL","C4":"nL","C5":"pL","C6":"nL","D1":"nL","D2":"nL","D3":"nL","D4":"nL","E1":"yL","E2":"pL","E3":"pL","E4":"pL","E5":"yL","F2":"nL","F3":"nL","F4":"pL","F5":"pL","NAT_ALIAS":"pU","IDS":"yL","IPS":"yL","G1":"pL","G2":"nL","G3":"nL","G4":"nL","G5":"nL","G6":"nL","G7":"yL","G8":"yL","G9":"pU"},"score":17.0},{"name":"AWS Network Firewall","tier":"Cloud-native","engine":"Managed (Suricata)","version":"Managed (verify)","license":"Managed service","note":"Stateful/stateless Rule Groups are native, but NAT is not this product's function - it's handled by a separate AWS NAT Gateway, hence N/A across the NAT block. Per-rule hit counters aren't exposed (metrics/flow logs only). IaC-first; TLS inspection and domain filtering are supported.","c":{"A1":"pU","A2":"pU","A3":"nL","A4":"nL","A5":"nL","A6":"nL","A7":"nL","A8":"nL","A9":"yL","A10":"nL","A11":"pL","A12":"nL","B1":"aL","B2":"aL","B3":"aL","B4":"aL","B5":"aL","B6":"aL","B7":"aL","B8":"aL","B9":"aL","B10":"aL","B11":"aL","B12":"aL","B13":"aL","B14":"aL","B15":"aL","B16":"aL","B17":"aL","B19":"aL","B20":"aL","B21":"aL","C1":"yL","C2":"yL","C3":"yV","C4":"yV","C5":"pL","C6":"pL","D1":"yL","D2":"pU","D3":"pU","D4":"nU","E1":"yL","E2":"pL","E3":"nL","E4":"yL","E5":"pL","F2":"pL","F3":"pL","F4":"pL","F5":"pL","NAT_ALIAS":"aL","IDS":"yL","IPS":"yL","G1":"aL","G2":"aL","G3":"aL","G4":"aL","G5":"aL","G6":"aL","G7":"nL","G8":"nL","G9":"nL"},"score":16.5},{"name":"GCP Cloud NGFW","tier":"Cloud-native","engine":"Managed (Palo Alto L7)","version":"Managed (verify)","license":"Managed service","note":"Hierarchical firewall policies (org-level grouping) are a strength; NAT is delivered by the separate Cloud NAT service, so N/A across the NAT block. L7/IPS in the Enterprise tier is Palo Alto-powered. Distributed enforcement, IaC-first.","c":{"A1":"pU","A2":"pU","A3":"nL","A4":"nL","A5":"nL","A6":"nL","A7":"nL","A8":"nL","A9":"yL","A10":"nL","A11":"yL","A12":"nL","B1":"aL","B2":"aL","B3":"aL","B4":"aL","B5":"aL","B6":"aL","B7":"aL","B8":"aL","B9":"aL","B10":"aL","B11":"aL","B12":"aL","B13":"aL","B14":"aL","B15":"aL","B16":"aL","B17":"aL","B19":"aL","B20":"aL","B21":"aL","C1":"yL","C2":"yL","C3":"yV","C4":"yV","C5":"pL","C6":"pU","D1":"yL","D2":"pU","D3":"pU","D4":"nU","E1":"yL","E2":"pL","E3":"nL","E4":"yL","E5":"pL","F2":"pL","F3":"pL","F4":"pL","F5":"pL","NAT_ALIAS":"aL","IDS":"pL","IPS":"pL","G1":"aL","G2":"aL","G3":"aL","G4":"aL","G5":"aL","G6":"aL","G7":"nL","G8":"nL","G9":"nL"},"score":16.0},{"name":"Shorewall","tier":"Installable Package","engine":"Linux (iptables/nft)","version":"5.x (verify)","license":"GPL-2.0","note":"Config-compiler with strong SNAT/DNAT/1:1 handling and zones/host-groups. Compile-then-restart is loosely candidate-like. HA via external tooling.","c":{"A1":"pL","A2":"pL","A3":"nL","A4":"nL","A5":"nL","A6":"nL","A7":"pL","A8":"nL","A9":"pL","A10":"nL","A11":"pL","A12":"nL","B1":"yL","B2":"yL","B3":"yL","B4":"pL","B5":"pL","B6":"yL","B7":"nL","B8":"pU","B9":"nL","B10":"nL","B11":"nL","B12":"nL","B13":"nL","B14":"nL","B15":"nL","B16":"nL","B17":"nL","B19":"pL","B20":"nL","B21":"nL","C1":"nL","C2":"nL","C3":"nL","C4":"nL","C5":"nL","C6":"nL","D1":"pL","D2":"nL","D3":"pL","D4":"nL","E1":"yL","E2":"nL","E3":"nL","E4":"pL","E5":"nL","F2":"nL","F3":"nL","F4":"nL","F5":"nL","NAT_ALIAS":"yL","IDS":"nL","IPS":"nL","G1":"pL","G2":"pL","G3":"pU","G4":"nL","G5":"pU","G6":"nL","G7":"nL","G8":"nL","G9":"nL"},"score":14.0},{"name":"firewalld","tier":"Installable Package","engine":"Linux (nft/iptables)","version":"1.x (verify)","license":"GPL-2.0","note":"Zone/policy abstraction; underlying counters aren't surfaced per-rule. Runtime-vs-permanent config is a candidate-like model (Partial). Management is D-Bus, not REST.","c":{"A1":"pU","A2":"pU","A3":"nL","A4":"nL","A5":"nL","A6":"nL","A7":"pU","A8":"nL","A9":"pL","A10":"nL","A11":"nL","A12":"nL","B1":"yL","B2":"yL","B3":"pL","B4":"nL","B5":"pU","B6":"nL","B7":"nL","B8":"nL","B9":"nL","B10":"nL","B11":"nL","B12":"nL","B13":"nL","B14":"nL","B15":"nL","B16":"nL","B17":"nL","B19":"pL","B20":"nL","B21":"nL","C1":"nL","C2":"nL","C3":"pL","C4":"pL","C5":"nL","C6":"pL","D1":"nL","D2":"nL","D3":"nL","D4":"nL","E1":"yL","E2":"nL","E3":"nL","E4":"pL","E5":"nL","F2":"nL","F3":"nL","F4":"nL","F5":"nL","NAT_ALIAS":"yL","IDS":"nL","IPS":"nL","G1":"pU","G2":"pU","G3":"pU","G4":"pU","G5":"pU","G6":"nL","G7":"nL","G8":"nL","G9":"nL"},"score":12.0},{"name":"ufw","tier":"Installable Package","engine":"Linux (iptables/nft)","version":"0.36+ (verify)","license":"GPL-3.0","note":"Deliberately minimal front-end: no per-rule counters or grouping exposed; NAT requires hand-editing before.rules. Rule comments supported.","c":{"A1":"nL","A2":"nL","A3":"nL","A4":"nL","A5":"nL","A6":"nL","A7":"nL","A8":"nL","A9":"nL","A10":"nL","A11":"yL","A12":"nL","B1":"pL","B2":"pL","B3":"nL","B4":"nL","B5":"nL","B6":"nL","B7":"nL","B8":"nL","B9":"nL","B10":"nL","B11":"nL","B12":"nL","B13":"nL","B14":"nL","B15":"nL","B16":"nL","B17":"nL","B19":"pL","B20":"nL","B21":"nL","C1":"nL","C2":"nL","C3":"nL","C4":"pL","C5":"nL","C6":"nL","D1":"nL","D2":"nL","D3":"nL","D4":"nL","E1":"yL","E2":"nL","E3":"nL","E4":"pL","E5":"nL","F2":"nL","F3":"nL","F4":"nL","F5":"nL","NAT_ALIAS":"yL","IDS":"nL","IPS":"nL","G1":"pU","G2":"nL","G3":"pU","G4":"nL","G5":"nL","G6":"nL","G7":"nL","G8":"nL","G9":"nL"},"score":6.5},{"name":"ConfigServer CSF","tier":"Installable Package","engine":"Linux (iptables) + LFD","version":"14.x (verify)","license":"GPL-3.0","note":"Host-based ingress/egress protection (cPanel world), not a NAT gateway - NAT columns are No by design. Cluster mode syncs deny lists (not stateful HA). LFD is host-level detection, not network IPS.","c":{"A1":"nL","A2":"nL","A3":"nL","A4":"nL","A5":"nL","A6":"nL","A7":"nL","A8":"nL","A9":"nL","A10":"pL","A11":"pL","A12":"nL","B1":"nL","B2":"nL","B3":"nL","B4":"nL","B5":"nL","B6":"nL","B7":"nL","B8":"nL","B9":"nL","B10":"nL","B11":"nL","B12":"nL","B13":"nL","B14":"nL","B15":"nL","B16":"nL","B17":"nL","B19":"nL","B20":"nL","B21":"nL","C1":"pL","C2":"nL","C3":"nL","C4":"pU","C5":"nL","C6":"nL","D1":"nL","D2":"nL","D3":"nL","D4":"pL","E1":"pL","E2":"nL","E3":"nL","E4":"pL","E5":"nL","F2":"nL","F3":"nL","F4":"nL","F5":"pL","NAT_ALIAS":"yL","IDS":"nL","IPS":"nL","G1":"nL","G2":"nL","G3":"nL","G4":"nL","G5":"nL","G6":"nL","G7":"nL","G8":"nL","G9":"nL"},"score":5.0}]};
+const META = PAYLOAD.meta, DATA = PAYLOAD.data;
+const COLS = META.cols, CATS = META.cats;
+const MAXSCORE = META.maxscore;
+const IDSID = META.special_cols.ids, IPSID = META.special_cols.ips;
+const catColor = {}; CATS.forEach(c=>catColor[c.id]=c.color);
+const catLabel = {}; CATS.forEach(c=>catLabel[c.id]=c.label);
+const catId = {}; CATS.forEach(c=>catId[c.label]=c.id);
+const TIER_ORDER = META.tiers;
+const tierIdx = {}; TIER_ORDER.forEach((t,i)=>tierIdx[t]=i);
+const tierClass = {"OSS Firewall":"t-oss","Router-Firewall":"t-router","Installable Package":"t-pkg",
+ "Commercial NGFW":"t-ngfw","Carrier-grade CGN":"t-cgn","Cloud-native":"t-cloud"};
+const tierShort = {"OSS Firewall":"OSS","Router-Firewall":"Router","Installable Package":"Pkg",
+ "Commercial NGFW":"NGFW","Carrier-grade CGN":"CGN","Cloud-native":"Cloud"};
+
+const suppRank = {y:3,p:2,a:1,n:0};
+const glyph = {y:"\u25CF",p:"\u25D0",n:"\u25CB",a:"\u2013"};
+const suppCls = {y:"cy",p:"cp",n:"cn",a:"ca"};
+const suppName = {y:"Yes",p:"Partial",n:"No",a:"N/A"};
+const delivName = {y:"Built-in (native)",p:"Optional add-on",n:"None"};
+const delivMark = {y:"N",p:"A",n:""};
+const confName = {V:"Verified",L:"Likely",U:"Unverified"};
+
+const state = { q:"", tiers:new Set(TIER_ORDER), cats:new Set(CATS.map(c=>c.id)),
+  conf:"all", sortCol:"__score__", sortDir:-1 };
+
+function visibleCols(){ return COLS.filter(c=>state.cats.has(catId[c.cat])); }
+
+function filteredRows(){
+  let rows = DATA.filter(d=>{
+    if(!state.tiers.has(d.tier)) return false;
+    if(state.q){ const q=state.q.toLowerCase();
+      if(!(d.name.toLowerCase().includes(q)||d.engine.toLowerCase().includes(q))) return false; }
+    return true;
+  });
+  if(state.sortCol==="__score__"){
+    rows.sort((a,b)=>{ if(a.score!==b.score) return state.sortDir*(a.score-b.score);
+      return a.name.localeCompare(b.name); });
+  } else if(state.sortCol==="__name__"){
+    rows.sort((a,b)=>a.name.localeCompare(b.name));
+  } else if(state.sortCol){
+    const col=state.sortCol;
+    rows.sort((a,b)=>{ const ra=suppRank[a.c[col][0]], rb=suppRank[b.c[col][0]];
+      if(ra!==rb) return state.sortDir*(ra-rb); return a.name.localeCompare(b.name); });
+  }
+  return rows;
+}
+
+function buildHead(cols){
+  let bands="<tr class='bands'><th class='corner' rowspan='2' onclick='sortBy(\"__name__\")'>"
+    +"<div class='t'>Product / platform &#8597;</div>"
+    +"<div class='h'>"+DATA.length+" platforms \u00b7 click a column to sort</div></th>";
+  let i=0;
+  while(i<cols.length){
+    let cat=catId[cols[i].cat], j=i;
+    while(j<cols.length && catId[cols[j].cat]===cat) j++;
+    const span=j-i;
+    bands+="<th class='catend' colspan='"+span+"' style='background:"+catColor[cat]+"'>"+catLabel[cat]+" \u00b7 "+span+"</th>";
+    i=j;
+  }
+  // score header (sticky right, spans both rows)
+  const sActive = state.sortCol==="__score__";
+  let sArrow = sActive ? (state.sortDir<0?"\u25BC":"\u25B2") : "";
+  bands+="<th class='scoreh"+(sActive?" sortactive":"")+"' rowspan='2' onclick='sortBy(\"__score__\")'>"
+    +"<div class='arrow'>"+sArrow+"</div><div class='t'>Score</div>"
+    +"<div class='h'>weighted \u00b7 max "+MAXSCORE.toFixed(1)+"</div></th>";
+  bands+="</tr>";
+  let colr="<tr class='cols'>";
+  for(let k=0;k<cols.length;k++){
+    const c=cols[k];
+    const endCat=(k===cols.length-1)||(cols[k+1].cat!==c.cat);
+    const active=state.sortCol===c.id;
+    let arrow=active?(state.sortDir<0?"\u25BC":"\u25B2"):"";
+    colr+="<th class='colh"+(endCat?" catend":"")+(active?" sortactive":"")+"' "
+      +"title=\""+escAttr(c.label)+"\" onclick=\"sortBy('"+c.id+"')\">"
+      +"<span class='arrow'>"+arrow+"</span><span class='vt'>"+esc(c.label)+"</span></th>";
+  }
+  colr+="</tr>";
+  return bands+colr;
+}
+
+function buildBody(rows, cols){
+  let html="";
+  rows.forEach((d,idx)=>{
+    const tc=tierClass[d.tier]||"t-pkg";
+    let noteHtml = d.note ? "<span class='note' title=\""+escAttr(d.note)+"\">i</span>" : "";
+    html+="<tr>";
+    html+="<td class='prod'><div class='pname'><span class='tierchip "+tc+"'>"+tierShort[d.tier]+"</span>"
+      +esc(d.name)+noteHtml+"</div><div class='pmeta'>"+esc(d.engine)
+      +" \u00b7 <span class='mono'>"+esc(d.version)+"</span></div></td>";
+    for(let k=0;k<cols.length;k++){
+      const c=cols[k]; const code=d.c[c.id]; const sp=code[0], cf=code[1];
+      const endCat=(k===cols.length-1)||(cols[k+1].cat!==c.cat);
+      const matches = state.conf==="all" || state.conf===cf;
+      const deliv = (c.id===IDSID||c.id===IPSID);
+      const vname = deliv ? delivName[sp] : suppName[sp];
+      const tip = c.label.split(":")[0]+" \u2014 "+vname+" ("+confName[cf]+")";
+      let dm = deliv && delivMark[sp] ? "<span class='dmark d"+delivMark[sp]+"'>"+delivMark[sp]+"</span>" : "";
+      html+="<td class='cell "+suppCls[sp]+(endCat?" catend":"")+(matches?" match":"")+"' title=\""+escAttr(tip)+"\">"
+        +"<span class='glyph'>"+glyph[sp]+"</span><span class='cbadge b"+cf+"'>"+cf+"</span>"+dm+"</td>";
+    }
+    // score cell
+    const w = MAXSCORE>0 ? Math.round(100*d.score/MAXSCORE) : 0;
+    html+="<td class='scorecell'><div class='scoreval'>"+d.score.toFixed(1)+"</div>"
+      +"<div class='scorebar'><i style='width:"+w+"%'></i></div>"
+      +(state.sortCol==="__score__"?"<div class='rank'>#"+(idx+1)+"</div>":"")+"</td>";
+    html+="</tr>";
+  });
+  return html;
+}
+
+function render(){
+  const cols=visibleCols(); const rows=filteredRows();
+  document.getElementById("thead").innerHTML=buildHead(cols);
+  document.getElementById("tbody").innerHTML=buildBody(rows,cols);
+  document.getElementById("count").textContent=
+    "Showing "+rows.length+" of "+DATA.length+" platforms \u00b7 "+cols.length+" of "+COLS.length+" feature columns";
+  document.getElementById("scroller").classList.toggle("dim", state.conf!=="all");
+}
+
+function sortBy(id){
+  if(id==="__name__"){ state.sortCol="__name__"; render(); return; }
+  if(state.sortCol===id){ state.sortDir = state.sortDir<0?1:-1; }
+  else { state.sortCol=id; state.sortDir=-1; }
+  render();
+}
+
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function escAttr(s){return esc(s).replace(/"/g,"&quot;");}
+
+document.addEventListener("DOMContentLoaded",()=>{
+  const search=document.getElementById("search");
+  search.addEventListener("input",e=>{state.q=e.target.value.trim(); render();});
+  document.querySelectorAll(".tierchip-f").forEach(ch=>ch.addEventListener("click",()=>{
+    const t=ch.dataset.tier; if(state.tiers.has(t)) state.tiers.delete(t); else state.tiers.add(t);
+    ch.classList.toggle("on", state.tiers.has(t)); render(); }));
+  document.querySelectorAll(".catchip").forEach(ch=>ch.addEventListener("click",()=>{
+    const c=ch.dataset.cat; if(state.cats.has(c)) state.cats.delete(c); else state.cats.add(c);
+    ch.classList.toggle("on", state.cats.has(c)); render(); }));
+  document.querySelectorAll(".confchip").forEach(ch=>ch.addEventListener("click",()=>{
+    document.querySelectorAll(".confchip").forEach(x=>x.classList.remove("on"));
+    ch.classList.add("on"); state.conf=ch.dataset.conf; render(); }));
+  document.getElementById("reset").addEventListener("click",()=>{
+    state.q=""; search.value=""; state.tiers=new Set(TIER_ORDER); state.cats=new Set(CATS.map(c=>c.id));
+    state.conf="all"; state.sortCol="__score__"; state.sortDir=-1;
+    document.querySelectorAll(".tierchip-f").forEach(x=>x.classList.add("on"));
+    document.querySelectorAll(".catchip").forEach(x=>x.classList.add("on"));
+    document.querySelectorAll(".confchip").forEach(x=>x.classList.toggle("on", x.dataset.conf==="all"));
+    render(); });
+  render();
+});
+</script>
+</body>
+</html>
